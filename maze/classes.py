@@ -1,13 +1,37 @@
+import collections
 import itertools
 import queue
 import threading
+import weakref
 
 import numpy as np
 import pygame as pg
 
-import maze.stuff as stuff
-import myutil.eventman as eventman
-from maze.constants import COLORMAP
+from .constants import COLORMAP
+from .stuff import maze_build, maze_solver
+from .util import pim_to_clipboard, pygame_to_pim
+
+
+class Eventman:
+    wsdic = collections.defaultdict(weakref.WeakSet)
+
+    @classmethod
+    def broadcast(cls, channel, *args, **kwargs):
+        if channel in cls.wsdic:
+            for func in cls.wsdic[channel]:
+                func(*args, **kwargs)
+
+    @classmethod
+    def addlistener(cls, channel, func):
+        cls.wsdic[channel].add(func)
+        return func
+
+    @classmethod
+    def listener(cls, channel):
+        def decorator(func):
+            cls.wsdic[channel].add(func)
+            return func
+        return decorator
 
 
 class Taskman:
@@ -38,18 +62,18 @@ class World:
         self.th = threading.Thread(target=self.maze_produce, daemon=True)
         self.th.start()
         self.__listener = [
-            eventman.addlistener(pg.KEYDOWN, self.keydown),
-            eventman.addlistener(pg.QUIT, self.quit),
-            eventman.addlistener(pg.MOUSEMOTION, self.mousemotion),
+            Eventman.addlistener(pg.KEYDOWN, self.keydown),
+            Eventman.addlistener(pg.QUIT, self.quit),
+            Eventman.addlistener(pg.MOUSEMOTION, self.mousemotion),
         ]
 
     def maze_produce(self):
         while self.keep_running:
             field = np.ones(self.shape, 'uint8')
-            start, goal = stuff.maze_build(field)
-            route1 = list(stuff.maze_solver(
+            start, goal = maze_build(field)
+            route1 = list(maze_solver(
                 field, start, goal, depthfirst=True))
-            route2 = list(stuff.maze_solver(field, start, goal))
+            route2 = list(maze_solver(field, start, goal))
             if len(route1) != len(route2):
                 self.q.put((field, route1, route2))
 
@@ -96,8 +120,8 @@ class World:
     def screenshot(self, ev):
         # pdb.set_trace()
         surface = pg.display.get_surface()
-        pim = stuff.pygame_to_pim(surface)
-        stuff.pim_to_clipboard(pim)
+        pim = pygame_to_pim(surface)
+        pim_to_clipboard(pim)
 
     def keydown(self, ev):
         handler = self.keydown.handlerz.get(ev.key)

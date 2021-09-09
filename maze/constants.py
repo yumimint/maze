@@ -1,6 +1,6 @@
 import enum
 
-from myutil.hsv2rgb import hsv2rgb
+from .util import hsv2rgb
 
 
 class FieldValue(enum.IntEnum):

@@ -3,12 +3,10 @@ import time
 
 import pygame as pg
 
-import maze.stuff as stuff
-from maze.classes import Taskman, World
-from maze.constants import FieldValue
-from myutil import eventman
-from myutil.cubicbezier import cubicbezier
-from myutil.hsv2rgb import hsv2rgb
+from .classes import Eventman, Taskman, World
+from .constants import FieldValue
+from .stuff import wiper
+from .util import cubicbezier, hsv2rgb
 
 
 def main():
@@ -38,7 +36,7 @@ def main():
         w, h = CS * CW, CS * CH
     pg.display.set_mode((w, h), pg.FULLSCREEN if args.fullscreen else 0)
 
-    eventman.broadcast("pygame ready")
+    Eventman.broadcast("pygame ready")
 
     w = World(CS, (CH, CW))
     w.wipe = 0
@@ -50,15 +48,15 @@ def main():
 
     while w.keep_running:
         for event in pg.event.get():
-            eventman.broadcast(event.type, event)
+            Eventman.broadcast(event.type, event)
         clock.tick(60)
         w.task.update()
-        eventman.broadcast("update")
+        Eventman.broadcast("update")
         w.update_cellsurf()
         surface.blit(w.cellsurf, (0, 0))
-        eventman.broadcast("draw", surface)
+        Eventman.broadcast("draw", surface)
         if w.wipe > 0:
-            stuff.wiper(surface, (0, 0, 0), w.wipe, **w.wipe_args)
+            wiper(surface, (0, 0, 0), w.wipe, **w.wipe_args)
         pg.display.update()
 
     pg.quit()
@@ -79,7 +77,7 @@ def maintask(world: World):
     ease = cubicbezier(1, 0, .39, 1)
     # ease = cubicbezier(0, 1, 1, 0)
 
-    @eventman.listener(pg.KEYDOWN)
+    @Eventman.listener(pg.KEYDOWN)
     def keydown(ev):
         keydown.flag = not keydown.flag
 
@@ -109,7 +107,7 @@ def maintask(world: World):
             if keydown.flag:
                 yield
 
-        @eventman.listener("draw")
+        @Eventman.listener("draw")
         def draw(surf):
             t = time.time()
             t -= int(t)

@@ -136,19 +136,3 @@ def wiper(
     for i in range(ndiv):
         d = min(L, int(Lc * f(i)))
         drawmask(i, d)
-
-
-def pim_to_clipboard(pim):
-    with io.BytesIO() as output:
-        pim.convert('RGB').save(output, 'BMP')
-        data = output.getvalue()
-
-    win32clipboard.OpenClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data[14:])
-    win32clipboard.CloseClipboard()
-
-
-def pygame_to_pim(surface):
-    raw_str = pg.image.tostring(surface, 'RGBA', False)
-    pim = Image.frombytes('RGBA', surface.get_size(), raw_str)
-    return pim
