@@ -64,25 +64,38 @@ def main():
     pg.quit()
 
 
+def timer(duration):
+    start = time.time()
+    end = start + duration
+    now = start
+    while now < end:
+        elapsed = now - start
+        yield elapsed / duration
+        now = time.time()
+    yield 1
+
+
 def maintask(world: World):
     ease = cubicbezier(1, 0, .39, 1)
     # ease = cubicbezier(0, 1, 1, 0)
-    world.wipe_args["virtical"] = True
-    world.wipe_args["reverse"] = False
+
+    @eventman.listener(pg.KEYDOWN)
+    def keydown(ev):
+        keydown.flag = not keydown.flag
+
+    keydown.flag = True
+    loopcount = 0
 
     while True:
+        world.wipe_args["virtical"] = (loopcount & 4) != 0
+        world.wipe_args["reverse"] = (loopcount & 2) != 0
+
         field, route, route2 = world.q.get()
         world.set_field(field)
 
-        end = time.time() + 2
-        while time.time() < end:
-            world.wipe = ease((end - time.time()) / 2)
+        for t in timer(2):
+            world.wipe = ease(1 - t)
             yield
-        world.wipe = 0
-
-        @eventman.listener(pg.KEYDOWN)
-        def keydown(ev):
-            keydown.flag = not keydown.flag
 
         keydown.flag = True
         for pos in route:
@@ -105,20 +118,18 @@ def maintask(world: World):
                 col = hsv2rgb(h, 1, 255)
                 world.drawcell2(surf, pos, col)
 
-        end = time.time() + 60
-        keydown.flag = True
-        while time.time() < end and keydown.flag:
+        keydown.flag = False
+        for t in timer(60):
+            if keydown.flag:
+                break
             yield
 
-        world.wipe_args["reverse"] = not world.wipe_args["reverse"]
-        end = time.time() + 2
-        while time.time() < end:
-            world.wipe = ease(1 - (end - time.time()) / 2)
+        for t in timer(2):
+            world.wipe = ease(t)
             yield
-        world.wipe = 1
 
-        del draw, keydown
-        world.wipe_args["virtical"] = not world.wipe_args["virtical"]
+        del draw
+        loopcount += 1
 
 
 if __name__ == "__main__":
