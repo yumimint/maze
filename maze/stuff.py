@@ -1,11 +1,8 @@
 import collections
-import io
 import math
 import random
 
 import pygame as pg
-import win32clipboard
-from PIL import Image
 
 from maze.constants import DIRECTIONS, FieldValue
 

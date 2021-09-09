@@ -1,5 +1,6 @@
 import io
 import math
+
 import pygame as pg
 import win32clipboard
 from PIL import Image
