@@ -138,29 +138,6 @@ def wiper(
         drawmask(i, d)
 
 
-def bezier(p0, p1, p2, p3, t):
-    _t = 1 - t
-    # まず、制御点を順に結んで得られる3つの線分
-    # P0 - P1, P1 - P2, P2 - P3（緑色の線）をそれぞれ
-    # t : 1 − t の比率で分割する点、P4, P5, P6 を求める。
-    p4 = p0 * _t + p1 * t
-    p5 = p1 * _t + p2 * t
-    p6 = p2 * _t + p3 * t
-
-    # 次に、これらの点を順に結んで得られる2つの線分
-    # P4 - P5, P5 - P6（赤色の線）を再びそれぞれ
-    # t : 1 − t の比率で分割する点 P7, P8 を求める。
-    p7 = p4 * _t + p5 * t
-    p8 = p5 * _t + p6 * t
-
-    # 最後に、この2点を結ぶ線分 P7 - P8（黄色の線）をさらに
-    # t : 1 − t の比率で分割する点 P9 を求めると、この点がベジェ曲線上の点となる。
-    p9 = p7 * _t + p8 * t
-
-    # この作業を 0 < t < 1 の範囲で繰り返し行う事により、P0, P1, P2, P3 を制御点とする3次ベジェ曲線（青い曲線）が得られる。
-    return p9
-
-
 def pim_to_clipboard(pim):
     with io.BytesIO() as output:
         pim.convert('RGB').save(output, 'BMP')
